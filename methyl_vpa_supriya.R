@@ -104,6 +104,7 @@ write.table(met3,file="RReadyFinal_v2.txt",quote=F,sep="\t")
 write.table(met_combat,file="RReadyFinal_v2_combat.txt",quote=F,sep="\t")
 
 ## identify VPA 2h signature and VPA 6 h signature.
+## With batch adjusted data
 pb_cells <- met_combat[,37:72] 
 vpa <- names(pb_cells)[grep("VPA", names(pb_cells))]
 ctr <- names(pb_cells)[grep("ont", names(pb_cells))]
@@ -131,6 +132,7 @@ design <-  model.matrix(~treatment+strain)
 fit2 <- lmFit(vpa_cells_logit,design)
 fit2 <- eBayes(fit2)
 
+# 2000 gene selection
 nTop <- 2000
 topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
 topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
@@ -163,10 +165,10 @@ topGenes_vpa6h_2_keep = topGenes_vpa6h_2[keep6,][1:200,]
 library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
 ##VPA_2h
 
-geneList_vpa2h <- rownames(topGenes_vpa2h_2)
+geneList_vpa2h <- rownames(topGenes_vpa2h_2_keep)
 S_matrix <- -fit2$coefficients[geneList_vpa2h,2]
 B_vector <- fit2$coefficients[geneList_vpa2h,1]+fit2$coefficients[geneList_vpa2h,2]
-Pi_matrix <- rep(0.95,nrow(topGenes_vpa2h_2))
+Pi_matrix <- rep(0.95,nrow(topGenes_vpa2h_2_keep))
 
 ##VPA_6h
 
@@ -267,14 +269,14 @@ boxplot(mcmc.pos.mean3$beta ~ label,ylab="vpa signature",main="test3")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="test4")
 dev.off()
 
-pa <- matrix(mcmc.pos.mean4$kappa,nrow=ncol(testData_sub_logit),1);rownames(pa) <- names(testData_sub_logit)
+pa <- matrix(mcmc.pos.mean4$kappa,nrow=ncol(testData_sub_TCGA_logit),1);rownames(pa) <- names(testData_sub_TCGA_logit)
 pa1 <- pa[order(rownames(pa)),1,drop=F]
 pa2 <- pa1[c(grep("11A",rownames(pa1))-1, grep("11B",rownames(pa1))-1,grep("11A",rownames(pa1)), grep("11B",rownames(pa1))),1,drop=F]
 dim(pa2) <- c(32,2)
 rownames(pa2) <- sapply(rownames(pa1)[1:32],function(x){substr(x,1,12)})
 colnames(pa2) <- c("tumor", "normal")
 
-write.csv(pa2,file="methylation_tcga_vpa.csv")
+write.csv(pa2,file="methylation_tcga_vpa_NEW.csv")
 
 ###
 coeff <- mcmc.pos.mean4$kappa
@@ -295,7 +297,7 @@ pdf("methylation_320p2_50_vpa_6h.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="320p2_50_vpa_6h_methylation_signature.pdf")
 dev.off()                           
 
-pdf("methylation$$_combat_tcga_vpa6h_2000.pdf")
-boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_2000_6h_methylation_signature.pdf")
+pdf("methylation$$_Unique+combat_tcga_vpa6h_2000.pdf")
+boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_2000_6h_methylation_Unique+Combat.pdf")
 dev.off()                           
                            
