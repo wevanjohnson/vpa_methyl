@@ -250,11 +250,11 @@ mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit, Bg = B_vector, X = S_matr
 mcmc.pos.mean3 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=F)
 
 #test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
-mcmc.chain <- assign.mcmc(Y = testData_sub_110p5_logit, Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
+mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit, Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
 mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
 vpa_pa <- mcmc.pos.mean4$kappa_pos
-row.names(vpa_pa) <- names(testData_sub_110p5)
-write.csv(vpa_pa, file="methylation_110p5_vpa_6h_100_all.csv")
+row.names(vpa_pa) <- names(testData_sub_TCGA)
+write.csv(vpa_pa, file="methylation_TCGA_all.csv") # csv file for all TCGA tumor-normal samples
 
 
 # plots and tables
