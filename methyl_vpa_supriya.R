@@ -299,5 +299,21 @@ dev.off()
 
 pdf("methylation$$_Unique+combat_tcga_vpa6h_2000.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_2000_6h_methylation_Unique+Combat.pdf")
-dev.off()                           
+dev.off()  
+
+
+## VPA methylation signature subtypes
+methyl <- read.csv("VPA_Methyl_Subtypes_Supriya.csv",as.is=T)
+
+pdf("methylation_subtype_supriya.pdf")
+
+
+boxplot(methyl[,c(2,5,8,11,14,17,20)], ylab="ASSIGN Signature", las=1, at=c(1,2,4,5,6,7,8), 
+        cex.lab=0.8, col="brown",frame=F, xaxt = "n", main="VPA Methylation Profile")
+legend("topleft",
+       legend=c("VPA"),
+       col=c("brown") ,
+       pch=15)
+axis(1.,at=c(1,2,4,5,6,7,8),labels=c("Normal","Tumor","Basal","Her2","Lum-A","Lum-B","Normal-Like"),tick=FALSE,cex.axis=0.7)
+dev.off()
                            
