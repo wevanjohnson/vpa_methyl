@@ -338,45 +338,45 @@ plot(pc[,1], pc[,2], col=as.factor(subBatch))
 ### ComBat
 batch <- c(rep("cellLine",36),rep("tcga",247))
 expr_combat <- ComBat(dat=expr2, batch, mod=NULL,numCovs=NULL, par.prior=TRUE,prior.plots=FALSE)
+write.table(expr_combat,file="exprFinal_v2_combat.txt",quote=F,sep="\t")                           
+### pca after ComBat
+pca <- prcomp(t(expr_combat), retx=T, center=T, scale=T)
+pc <- pca$x
                            
-                           ### pca after ComBat
-                           pca <- prcomp(t(expr_combat), retx=T, center=T, scale=T)
-                           pc <- pca$x
+tissue <- as.character(c(rep("00",36),sapply(names(expr_combat)[37:283],function(x){substr(x,14,15)})))
+subBatch <- as.character(c(rep("cellLine",36),sapply(names(expr_combat)[37:283],function(x){substr(x,22,25)})))
                            
-                           tissue <- as.character(c(rep("00",36),sapply(names(expr_combat)[37:283],function(x){substr(x,14,15)})))
-                           subBatch <- as.character(c(rep("cellLine",36),sapply(names(expr_combat)[37:283],function(x){substr(x,22,25)})))
+plot(pc[,1], pc[,2], col=as.factor(tissue))
+plot(pc[,1], pc[,2], col=as.factor(subBatch))
                            
-                           plot(pc[,1], pc[,2], col=as.factor(tissue))
-                           plot(pc[,1], pc[,2], col=as.factor(subBatch))
-                           
-                           # ### subset cell line data to the vpa treatment and ctr using the expr_combat
-                           # cellline <- expr_combat[,1:36]
-                           # vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
-                           # vpa <- cellline[,vpa.cellline]
+# ### subset cell line data to the vpa treatment and ctr using the expr_combat
+# cellline <- expr_combat[,1:36]
+# vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
+# vpa <- cellline[,vpa.cellline]
+ # 
+# vpa.matrix <- as.matrix(vpa)
+# group <- rep(c(1,0),length=16)
+# pair <- as.factor(rep(1:8,each=2,length=16))
                            # 
-                           # vpa.matrix <- as.matrix(vpa)
-                           # group <- rep(c(1,0),length=16)
-                           # pair <- as.factor(rep(1:8,each=2,length=16))
-                           # 
-                           # #ctr.idx <- seq(1,16,by=2)
-                           # #vpa.idx <- seq(2,16,by=2)
-                           # #t.test(vpa.matrix[1,ctr.idx],vpa.matrix[1,vpa.idx],paired=T)
-                           # 
-                           # ### select significant genes using expr_combat
-                           # result <- matrix(nrow=nrow(vpa.matrix),ncol=4)
-                           # colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
-                           # rownames(result) <- row.names(vpa)
-                           # for (i in 1:nrow(vpa.matrix)){
-                           #   #if(i%%100==0){print(i)}
-                           #   lm1 <- lm(vpa.matrix[i,] ~ group + pair)
-                           #   result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
-                           # }
-                           # 
-                           # topGenes <- result[order(result[,4]),]
-                           # fdr <- p.adjust(topGenes[,4],method="fdr")
-                           # topGenes <- cbind(topGenes,fdr)
+# #ctr.idx <- seq(1,16,by=2)
+# #vpa.idx <- seq(2,16,by=2)
+# #t.test(vpa.matrix[1,ctr.idx],vpa.matrix[1,vpa.idx],paired=T)
+  
+# ### select significant genes using expr_combat
+ # result <- matrix(nrow=nrow(vpa.matrix),ncol=4)
+# colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
+# rownames(result) <- row.names(vpa)
+# for (i in 1:nrow(vpa.matrix)){
+#   #if(i%%100==0){print(i)}
+#   lm1 <- lm(vpa.matrix[i,] ~ group + pair)
+#   result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
+# }
+
+# topGenes <- result[order(result[,4]),]
+# fdr <- p.adjust(topGenes[,4],method="fdr")
+# topGenes <- cbind(topGenes,fdr)
                            
-                           ### subset cell line data to the vpa treatment and ctr using the expr2
+### subset cell line data to the vpa treatment and ctr using the expr2
                            cellline <- expr2[,1:36]
                            vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
                            vpa <- cellline[,vpa.cellline]
@@ -403,33 +403,32 @@ expr_combat <- ComBat(dat=expr2, batch, mod=NULL,numCovs=NULL, par.prior=TRUE,pr
                            # fdr <- p.adjust(topGenes[,4],method="fdr")
                            # topGenes <- cbind(topGenes,fdr)
                            
-                           # alternative limma
-                           library(limma)
+# alternative limma
+library(limma)
+design <-  model.matrix(~group+pair)
+fit <- lmFit(vpa.matrix,design)
+fit <- eBayes(fit)
                            
-                           design <-  model.matrix(~group+pair)
-                           fit <- lmFit(vpa.matrix,design)
-                           fit <- eBayes(fit)
+topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
+### the gene selected from the combat adjusted data is the same as the combat unadjusted data (est_beta is different, but the t-statistic and p-values are the same.)
                            
-                           topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
-                           ### the gene selected from the combat adjusted data is the same as the combat unadjusted data (est_beta is different, but the t-statistic and p-values are the same.)
+### ASSIGN
+library(ASSIGN)
+nTop <- 200
+geneList <- rownames(topGenes)[1:nTop]
+#testData_sub <- expr_combat[geneList,37:283]
+testData_sub <- expr2[geneList,37:283]
+B_vector <- topGenes[1:nTop,1]
+S_matrix <- topGenes[1:nTop,2]
+Pi_matrix <- rep(0.95,nTop)
                            
-                           ### ASSIGN
-                           library(ASSIGN)
-                           nTop <- 200
-                           geneList <- rownames(topGenes)[1:nTop]
-                           #testData_sub <- expr_combat[geneList,37:283]
-                           testData_sub <- expr2[geneList,37:283]
-                           B_vector <- topGenes[1:nTop,1]
-                           S_matrix <- topGenes[1:nTop,2]
-                           Pi_matrix <- rep(0.95,nTop)
-                           
-                           ##limma
-                           geneList <- topGenes_vpa$ID[1:nTop]
-                           #testData_sub <- expr_bombat[geneList,37:283]
-                           testData_sub <- expr2[geneList,37:283]
-                           B_vector <- fit$coef[geneList,1]
-                           S_matrix <- fit$coef[geneList,2]
-                           Pi_matrix <- rep(0.95,nTop)
+##limma
+geneList <- topGenes_vpa$ID[1:nTop]
+#testData_sub <- expr_bombat[geneList,37:283]
+testData_sub <- expr2[geneList,37:283]
+B_vector <- fit$coef[geneList,1]
+S_matrix <- fit$coef[geneList,2]
+Pi_matrix <- rep(0.95,nTop)
                            
                            
                            #test1: adaptive_B=F, adaptive_S=F, mixture_beta=F
@@ -467,3 +466,86 @@ expr_combat <- ComBat(dat=expr2, batch, mod=NULL,numCovs=NULL, par.prior=TRUE,pr
                            
                            write.csv(pa2,file="Combat_test4.csv")
                            
+#######################
+## Supriya's analysis-gene selectionx for gene expression by LIMMA
+
+cellline <- expr_combat[,1:36]
+vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
+vpa <- cellline[,vpa.cellline]
+ 
+vpa.matrix <- as.matrix(vpa)
+group <- rep(c(1,0),length=16)
+pair <- as.factor(rep(1:8,each=2,length=16))
+                           # 
+
+library(limma)
+design <-  model.matrix(~group+pair)
+fit <- lmFit(vpa.matrix,design)
+fit <- eBayes(fit)                     
+topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
+
+
+
+expr <- read.table("finalMerged.txt",row.names="external_gene_id",header=T)
+cell line <- expr_combat (1:36)
+fit2 <- lmFit(cell line,design)
+fit2 <- eBayes(fit2)
+                        
+# 2000 gene selection
+nTop <- 2000
+                           topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
+                           topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
+                           
+                           #  associate methylation sites with genes vpa2
+                           vpa2h <- topGenes_vpa2h_2[topGenes_vpa2h_2[,5]<0.05,]
+                           vpa2_id <- rownames(vpa2h)
+                           vpa2_gene <- NULL
+                           for (i in 1:length(vpa2_id)){
+                           vpa2_gene <- c(vpa2_gene, strsplit(vpa2_id[i],split="_")[[1]][4])
+                           }
+                           vpa2_gene_uniq <- unique(vpa2_gene)
+                           keep2 = (vpa2_gene != "NONE") & (!duplicated(vpa2_gene))   ## Evan remove diuplicated probes and controle probes ("NONE")
+                           topGenes_vpa2h_2_keep = topGenes_vpa2h_2[keep2,][1:200,]
+                           
+                           
+                           # associate methylation sites with genes vpa6
+                           vpa6h <- topGenes_vpa6h_2[topGenes_vpa6h_2[,5]<0.05,]
+                           vpa6_id <- rownames(vpa6h)
+                           vpa6_gene <- NULL
+                           for (i in 1:length(vpa6_id)){
+                           vpa6_gene <- c(vpa6_gene, strsplit(vpa6_id[i],split="_")[[1]][4])
+                           }
+                           vpa6_gene_uniq <- unique(vpa6_gene)
+                           keep6 = (vpa6_gene != "NONE") & (!duplicated(vpa6_gene))   ## Evan remove diuplicated probes and controle probes ("NONE")
+                           topGenes_vpa6h_2_keep = topGenes_vpa6h_2[keep6,][1:200,]
+                           ###########
+                           ### ASSIGN
+                           
+                           library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
+                           ##VPA_2h
+                           
+                           geneList_vpa2h <- rownames(topGenes_vpa2h_2_keep)
+                           S_matrix <- -fit2$coefficients[geneList_vpa2h,2]
+                           B_vector <- fit2$coefficients[geneList_vpa2h,1]+fit2$coefficients[geneList_vpa2h,2]
+                           Pi_matrix <- rep(0.95,nrow(topGenes_vpa2h_2_keep))
+                           
+                           ##VPA_6h
+                           
+                           geneList_vpa6h <- rownames(topGenes_vpa6h_2)
+                           S_matrix <- -fit2$coefficients[geneList_vpa6h,2]
+                           B_vector <- fit2$coefficients[geneList_vpa6h,1]+fit2$coefficients[geneList_vpa6h,2]
+                           Pi_matrix <- rep(0.95,nrow(topGenes_vpa6h_2))
+                           
+                           #TCGA
+                           testData_sub_TCGA <-met_combat[geneList_vpa6h,73:319]
+                           testData_sub_TCGA[testData_sub_TCGA<0] = 0
+                           testData_sub_TCGA[testData_sub_TCGA>.998] = .998
+                           testData_sub_TCGA_logit <- log2((testData_sub_TCGA+0.001)/(1-(testData_sub_TCGA+0.001)))
+                           
+                           #test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
+                           mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit , Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
+                           mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
+                           vpa_pa <- mcmc.pos.mean4$beta_pos
+                           
+
+
