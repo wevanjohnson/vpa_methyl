@@ -469,6 +469,15 @@ Pi_matrix <- rep(0.95,nTop)
 #######################
 ## Supriya's analysis-gene selection for gene expression by LIMMA
 
+library(sva)
+
+expr <- read.table("finalMerged.txt",row.names="external_gene_id",header=T)
+expr2 <- expr[complete.cases(expr),]
+                           
+### ComBat
+batch <- c(rep("cellLine",36),rep("tcga",247))
+expr_combat <- ComBat(dat=expr2, batch, mod=NULL,numCovs=NULL, par.prior=TRUE,prior.plots=FALSE)
+write.table(expr_combat,file="exprFinal_v2_combat.txt",quote=F,sep="\t") 
 
 cellline <- expr_combat[,1:36]
 vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
@@ -479,15 +488,24 @@ group <- rep(c(1,0),length=16)
 pair <- as.factor(rep(1:8,each=2,length=16))
                            
 
+# ### select significant genes using expr_combat
+ result <- matrix(nrow=nrow(vpa.matrix),ncol=4)
+                           # colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
+                           # rownames(result) <- row.names(vpa)
+                           # for (i in 1:nrow(vpa.matrix)){
+                           #   #if(i%%100==0){print(i)}
+                           #   lm1 <- lm(vpa.matrix[i,] ~ group + pair)
+                           #   result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
+                           # }
+                           
+                           # topGenes <- result[order(result[,4]),]
+                           # fdr <- p.adjust(topGenes[,4],method="fdr")
+                           # topGenes <- cbind(topGenes,fdr)
 library(limma)
 design <-  model.matrix(~group+pair)
 fit <- lmFit(vpa.matrix,design)
 fit <- eBayes(fit)                     
 topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
-
-
-
-expr <- read.table("finalMerged.txt",row.names="external_gene_id",header=T)
 cell line <- expr_combat (1:36)
 fit2 <- lmFit(cell line,design)
 fit2 <- eBayes(fit2)
