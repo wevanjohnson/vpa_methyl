@@ -377,12 +377,12 @@ plot(pc[,1], pc[,2], col=as.factor(subBatch))
 # topGenes <- cbind(topGenes,fdr)
                            
 ### subset cell line data to the vpa treatment and ctr using the expr2
-                           cellline <- expr2[,1:36]
-                           vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
-                           vpa <- cellline[,vpa.cellline]
+cellline <- expr2[,1:36]
+vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
+vpa <- cellline[,vpa.cellline]
                            
-                           vpa.matrix <- as.matrix(vpa)
-                           group <- rep(c(1,0),length=16)
+vpa.matrix <- as.matrix(vpa)
+group <- rep(c(1,0),length=16)
                            pair <- as.factor(rep(1:8,each=2,length=16))
                            
                            #ctr.idx <- seq(1,16,by=2)
@@ -467,7 +467,8 @@ Pi_matrix <- rep(0.95,nTop)
                            write.csv(pa2,file="Combat_test4.csv")
                            
 #######################
-## Supriya's analysis-gene selectionx for gene expression by LIMMA
+## Supriya's analysis-gene selection for gene expression by LIMMA
+
 
 cellline <- expr_combat[,1:36]
 vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
@@ -476,7 +477,7 @@ vpa <- cellline[,vpa.cellline]
 vpa.matrix <- as.matrix(vpa)
 group <- rep(c(1,0),length=16)
 pair <- as.factor(rep(1:8,each=2,length=16))
-                           # 
+                           
 
 library(limma)
 design <-  model.matrix(~group+pair)
@@ -491,50 +492,24 @@ cell line <- expr_combat (1:36)
 fit2 <- lmFit(cell line,design)
 fit2 <- eBayes(fit2)
                         
-# 2000 gene selection
-nTop <- 2000
-                           topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
-                           topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
-                           
-                           #  associate methylation sites with genes vpa2
-                           vpa2h <- topGenes_vpa2h_2[topGenes_vpa2h_2[,5]<0.05,]
-                           vpa2_id <- rownames(vpa2h)
-                           vpa2_gene <- NULL
-                           for (i in 1:length(vpa2_id)){
-                           vpa2_gene <- c(vpa2_gene, strsplit(vpa2_id[i],split="_")[[1]][4])
-                           }
-                           vpa2_gene_uniq <- unique(vpa2_gene)
-                           keep2 = (vpa2_gene != "NONE") & (!duplicated(vpa2_gene))   ## Evan remove diuplicated probes and controle probes ("NONE")
-                           topGenes_vpa2h_2_keep = topGenes_vpa2h_2[keep2,][1:200,]
+# 1000 gene selection
+nTop <- 1000
+topGenes_vpa_1000 <-topTable(fit2,coef=2,number=nTop)
                            
                            
-                           # associate methylation sites with genes vpa6
-                           vpa6h <- topGenes_vpa6h_2[topGenes_vpa6h_2[,5]<0.05,]
-                           vpa6_id <- rownames(vpa6h)
-                           vpa6_gene <- NULL
-                           for (i in 1:length(vpa6_id)){
-                           vpa6_gene <- c(vpa6_gene, strsplit(vpa6_id[i],split="_")[[1]][4])
-                           }
-                           vpa6_gene_uniq <- unique(vpa6_gene)
-                           keep6 = (vpa6_gene != "NONE") & (!duplicated(vpa6_gene))   ## Evan remove diuplicated probes and controle probes ("NONE")
-                           topGenes_vpa6h_2_keep = topGenes_vpa6h_2[keep6,][1:200,]
+                           
                            ###########
                            ### ASSIGN
                            
                            library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
-                           ##VPA_2h
+                           ##VPA_1000
                            
-                           geneList_vpa2h <- rownames(topGenes_vpa2h_2_keep)
-                           S_matrix <- -fit2$coefficients[geneList_vpa2h,2]
-                           B_vector <- fit2$coefficients[geneList_vpa2h,1]+fit2$coefficients[geneList_vpa2h,2]
-                           Pi_matrix <- rep(0.95,nrow(topGenes_vpa2h_2_keep))
+                           geneList_vpa_1000 <- rownames(topGenes_1000)
+                           S_matrix <- -fit2$coefficients[geneList_vpa_1000,2]
+                           B_vector <- fit2$coefficients[geneList_vpa_1000,1]+fit2$coefficients[geneList_vpa2h,2]
+                           Pi_matrix <- rep(0.95,nrow(topGenes_a_1000))
                            
-                           ##VPA_6h
-                           
-                           geneList_vpa6h <- rownames(topGenes_vpa6h_2)
-                           S_matrix <- -fit2$coefficients[geneList_vpa6h,2]
-                           B_vector <- fit2$coefficients[geneList_vpa6h,1]+fit2$coefficients[geneList_vpa6h,2]
-                           Pi_matrix <- rep(0.95,nrow(topGenes_vpa6h_2))
+                           ##          
                            
                            #TCGA
                            testData_sub_TCGA <-met_combat[geneList_vpa6h,73:319]
