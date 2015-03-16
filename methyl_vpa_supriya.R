@@ -132,8 +132,8 @@ design <-  model.matrix(~treatment+strain)
 fit2 <- lmFit(vpa_cells_logit,design)
 fit2 <- eBayes(fit2)
 
-# 2000 gene selection
-nTop <- 2000
+# 1000 gene selection
+nTop <- 1000
 topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
 topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
 
@@ -254,7 +254,7 @@ mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit, Bg = B_vector, X = S_matr
 mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
 vpa_pa <- mcmc.pos.mean4$kappa_pos
 row.names(vpa_pa) <- names(testData_sub_TCGA)
-write.csv(vpa_pa, file="methylation_TCGA_all.csv") # csv file for all TCGA tumor-normal samples
+write.csv(vpa_pa, file="methylation_TCGA_all_1000genes.csv") # csv file for all TCGA tumor-normal samples
 
 
 # plots and tables
@@ -297,8 +297,8 @@ pdf("methylation_320p2_50_vpa_6h.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="320p2_50_vpa_6h_methylation_signature.pdf")
 dev.off()                           
 
-pdf("methylation$$_Unique+combat_tcga_vpa6h_2000.pdf")
-boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_2000_6h_methylation_Unique+Combat.pdf")
+pdf("methylation$$_Unique+combat_tcga_vpa6h_1000.pdf")
+boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_1000_6h_methylation_Unique+Combat.pdf")
 dev.off()  
 
 
@@ -424,7 +424,7 @@ Pi_matrix <- rep(0.95,nTop)
                            
 ##limma
 geneList <- topGenes_vpa$ID[1:nTop]
-#testData_sub <- expr_bombat[geneList,37:283]
+#testData_sub <- expr_combat[geneList,37:283]
 testData_sub <- expr2[geneList,37:283]
 B_vector <- fit$coef[geneList,1]
 S_matrix <- fit$coef[geneList,2]
@@ -489,18 +489,18 @@ pair <- as.factor(rep(1:8,each=2,length=16))
                            
 
 # ### select significant genes using expr_combat
- result <- matrix(nrow=nrow(vpa.matrix),ncol=4)
-                           # colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
-                           # rownames(result) <- row.names(vpa)
-                           # for (i in 1:nrow(vpa.matrix)){
-                           #   #if(i%%100==0){print(i)}
-                           #   lm1 <- lm(vpa.matrix[i,] ~ group + pair)
-                           #   result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
-                           # }
+result <- matrix(nrow=nrow(vpa.matrix),ncol=4)
+colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
+rownames(result) <- row.names(vpa)
+for (i in 1:nrow(vpa.matrix)){
+if(i%%100==0){print(i)}
+lm1 <- lm(vpa.matrix[i,] ~ group + pair)
+result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
+}
                            
-                           # topGenes <- result[order(result[,4]),]
-                           # fdr <- p.adjust(topGenes[,4],method="fdr")
-                           # topGenes <- cbind(topGenes,fdr)
+topGenes <- result[order(result[,4]),]
+fdr <- p.adjust(topGenes[,4],method="fdr")
+topGenes <- cbind(topGenes,fdr)
 library(limma)
 design <-  model.matrix(~group+pair)
 fit <- lmFit(vpa.matrix,design)
@@ -513,32 +513,34 @@ fit2 <- eBayes(fit2)
 # 1000 gene selection
 nTop <- 1000
 topGenes_vpa_1000 <-topTable(fit2,coef=2,number=nTop)
+###########
+### ASSIGN
+library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
+##VPA_1000
+geneList_vpa_1000 <- rownames(topGenes_vpa_1000)
+S_matrix <- -fit2$coefficients[geneList_vpa_1000,2]
+B_vector <- fit2$coefficients[geneList_vpa_1000,1]+fit2$coefficients[geneList_vpa_1000,2]
+Pi_matrix <- rep(0.95,nrow(topGenes_vpa_1000))
+         
+#TCGA
+geneList <- topGenes_vpa$ID[1:nTop]
+testData_TCGA_sub <- expr_combat[geneList,37:283]
+                          
+#test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
+mcmc.chain <- assign.mcmc(Y = testData_TCGA_sub , Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
+mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
+vpa_pa <- mcmc.pos.mean4$beta_pos
+
+row.names(vpa_pa) <- names(testData_sub_TCGA)
+write.csv(vpa_pa, file="expression_TCGA_all_supriya.csv") # csv file for all TCGA tumor-normal samples
+
+# plots and tables
+label <- as.factor(c(rep("normal",32),rep("tumor",215)))
                            
-                           
-                           
-                           ###########
-                           ### ASSIGN
-                           
-                           library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
-                           ##VPA_1000
-                           
-                           geneList_vpa_1000 <- rownames(topGenes_1000)
-                           S_matrix <- -fit2$coefficients[geneList_vpa_1000,2]
-                           B_vector <- fit2$coefficients[geneList_vpa_1000,1]+fit2$coefficients[geneList_vpa2h,2]
-                           Pi_matrix <- rep(0.95,nrow(topGenes_a_1000))
-                           
-                           ##          
-                           
-                           #TCGA
-                           testData_sub_TCGA <-met_combat[geneList_vpa6h,73:319]
-                           testData_sub_TCGA[testData_sub_TCGA<0] = 0
-                           testData_sub_TCGA[testData_sub_TCGA>.998] = .998
-                           testData_sub_TCGA_logit <- log2((testData_sub_TCGA+0.001)/(1-(testData_sub_TCGA+0.001)))
-                           
-                           #test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
-                           mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit , Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
-                           mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
-                           vpa_pa <- mcmc.pos.mean4$beta_pos
+                      
+pdf("expression_TCGA_1000_supriya.pdf")
+boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_1000_expression.pdf")
+dev.off()  
                            
 
 
