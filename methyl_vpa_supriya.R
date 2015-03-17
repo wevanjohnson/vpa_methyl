@@ -105,7 +105,7 @@ write.table(met_combat,file="RReadyFinal_v2_combat.txt",quote=F,sep="\t")
 
 ## identify VPA 2h signature and VPA 6 h signature.
 ## With batch adjusted data
-pb_cells <- met_combat[,37:72] 
+pb_cells <- met3[,37:72] 
 vpa <- names(pb_cells)[grep("VPA", names(pb_cells))]
 ctr <- names(pb_cells)[grep("ont", names(pb_cells))]
 
@@ -132,8 +132,8 @@ design <-  model.matrix(~treatment+strain)
 fit2 <- lmFit(vpa_cells_logit,design)
 fit2 <- eBayes(fit2)
 
-# 1000 gene selection
-nTop <- 1000
+# 200 gene selection
+nTop <- 200
 topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
 topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
 
@@ -189,7 +189,7 @@ mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adapt
 vpa_pa <- mcmc.pos.mean4$beta_pos
 
 #xenograph
-testData_sub_xenograph <- met_combat[geneList_vpa2h,1:36]
+testData_sub_xenograph <- met3[geneList_vpa2h,1:36]
 testData_sub_xenograph_logit <- log2((testData_sub_xenograph+0.001)/(1-(testData_sub_xenograph+0.001)))
 
 #110p5
@@ -250,7 +250,7 @@ mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit, Bg = B_vector, X = S_matr
 mcmc.pos.mean3 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=F)
 
 #test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
-mcmc.chain <- assign.mcmc(Y = testData_sub_TCGA_logit, Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
+mcmc.chain <- assign.mcmc(Y = testData_sub_110p5_logit, Bg = B_vector, X = S_matrix, Delta_prior_p = Pi_matrix, iter=2000, adaptive_B=T, adaptive_S=T, mixture_beta=T, p_beta = 0.5)
 mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
 vpa_pa <- mcmc.pos.mean4$kappa_pos
 row.names(vpa_pa) <- names(testData_sub_TCGA)
@@ -289,7 +289,7 @@ rownames(coeff) <- names(testData_sub_logit)
 colnames(coeff) <- "vpa_6h_signature"
 write.csv(coeff,file="320p2_vpa6h_methylation_signature.csv")
 
-pdf("methylation_uni+Combat_110p5_vpa_200_2h.pdf")
+pdf("methylation_uni+Combat_110p5_vpa_200_6h.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="110p5_200_vpa_2h_ Unique+Combat_methylation_signature.pdf")
 dev.off()                           
 
