@@ -105,7 +105,7 @@ write.table(met_combat,file="RReadyFinal_v2_combat.txt",quote=F,sep="\t")
 
 ## identify VPA 2h signature and VPA 6 h signature.
 ## With batch adjusted data
-pb_cells <- met3[,37:72] 
+pb_cells <- met[,37:72] 
 vpa <- names(pb_cells)[grep("VPA", names(pb_cells))]
 ctr <- names(pb_cells)[grep("ont", names(pb_cells))]
 
@@ -189,7 +189,7 @@ mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adapt
 vpa_pa <- mcmc.pos.mean4$beta_pos
 
 #xenograph
-testData_sub_xenograph <- met3[geneList_vpa2h,1:36]
+testData_sub_xenograph <- met[geneList_vpa2h,1:36]
 testData_sub_xenograph_logit <- log2((testData_sub_xenograph+0.001)/(1-(testData_sub_xenograph+0.001)))
 
 #110p5
@@ -353,7 +353,7 @@ plot(pc[,1], pc[,2], col=as.factor(subBatch))
 # cellline <- expr_combat[,1:36]
 # vpa.cellline <- sort(names(cellline)[c(grep("vpa",names(cellline)),grep("ctr",names(cellline)))])[-c(3,4,11,12,19)]
 # vpa <- cellline[,vpa.cellline]
- # 
+ 
 # vpa.matrix <- as.matrix(vpa)
 # group <- rep(c(1,0),length=16)
 # pair <- as.factor(rep(1:8,each=2,length=16))
@@ -367,7 +367,7 @@ plot(pc[,1], pc[,2], col=as.factor(subBatch))
 # colnames(result) <- c("est_beta0","est_beta1","tstat", "pvalue")
 # rownames(result) <- row.names(vpa)
 # for (i in 1:nrow(vpa.matrix)){
-#   #if(i%%100==0){print(i)}
+#   if(i%%100==0){print(i)}
 #   lm1 <- lm(vpa.matrix[i,] ~ group + pair)
 #   result[i,] <- c(summary(lm1)$coef[1,1],summary(lm1)$coef[2,c(1,3,4)])
 # }
@@ -416,8 +416,8 @@ topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
 library(ASSIGN)
 nTop <- 200
 geneList <- rownames(topGenes)[1:nTop]
-#testData_sub <- expr_combat[geneList,37:283]
-testData_sub <- expr2[geneList,37:283]
+testData_sub <- expr_combat[geneList,37:283]
+#testData_sub <- expr2[geneList,37:283]
 B_vector <- topGenes[1:nTop,1]
 S_matrix <- topGenes[1:nTop,2]
 Pi_matrix <- rep(0.95,nTop)
@@ -506,24 +506,27 @@ design <-  model.matrix(~group+pair)
 fit <- lmFit(vpa.matrix,design)
 fit <- eBayes(fit)                     
 topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
-cell line <- expr_combat (1:36)
-fit2 <- lmFit(cell line,design)
+cellline <- expr_combat [,1:36]
+fit2 <- lmFit(cellline,design)
 fit2 <- eBayes(fit2)
                         
 # 1000 gene selection
 nTop <- 1000
-topGenes_vpa_1000 <-topTable(fit2,coef=2,number=nTop)
+topGenes_vpa <-topTable(fit2,coef=2,number=nTop)
+write.csv(topGenes_vpa$ID[topGenes_vpa[,5]<0.05], file="vpa_diffGene_fdr_0.05_new.csv")                       
+
 ###########
 ### ASSIGN
 library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
 ##VPA_1000
-geneList_vpa_1000 <- rownames(topGenes_vpa_1000)
-S_matrix <- -fit2$coefficients[geneList_vpa_1000,2]
-B_vector <- fit2$coefficients[geneList_vpa_1000,1]+fit2$coefficients[geneList_vpa_1000,2]
-Pi_matrix <- rep(0.95,nrow(topGenes_vpa_1000))
-         
+geneList_vpa <- rownames(topGenes_vpa)
+S_matrix <- -fit2$coefficients[geneList_vpa,2]
+B_vector <- fit2$coefficients[geneList_vpa,1]+fit2$coefficients[geneList_vpa,2]
+Pi_matrix <- rep(0.95,nrow(topGenes_vpa))
+
+
 #TCGA
-geneList <- topGenes_vpa$ID[1:nTop]
+geneList <- rownames(topGenes)[1:nTop]
 testData_TCGA_sub <- expr_combat[geneList,37:283]
                           
 #test4: adaptive_B=T, adaptive_S=T, mixture_beta=T
@@ -532,13 +535,13 @@ mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adapt
 vpa_pa <- mcmc.pos.mean4$beta_pos
 
 row.names(vpa_pa) <- names(testData_sub_TCGA)
-write.csv(vpa_pa, file="expression_TCGA_all_supriya.csv") # csv file for all TCGA tumor-normal samples
+write.csv(vpa_pa, file="expression_TCGA_all_supriya_today.csv") # csv file for all TCGA tumor-normal samples
 
 # plots and tables
 label <- as.factor(c(rep("normal",32),rep("tumor",215)))
                            
                       
-pdf("expression_TCGA_1000_supriya.pdf")
+pdf("expression_TCGA_1000_supriya-today.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_1000_expression.pdf")
 dev.off()  
                            
