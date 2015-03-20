@@ -510,15 +510,15 @@ cellline <- expr_combat [,1:36]
 fit2 <- lmFit(cellline,design)
 fit2 <- eBayes(fit2)
                         
-# 1000 gene selection
-nTop <- 1000
+# 2000 gene selection
+nTop <- 500
 topGenes_vpa <-topTable(fit2,coef=2,number=nTop)
-write.csv(topGenes_vpa$ID[topGenes_vpa[,5]<0.05], file="vpa_diffGene_fdr_0.05_new.csv")                       
+write.csv(topGenes_vpa$ID[topGenes_vpa[,5]<0.05], file="vpa_diffGene_fdr_0.05_new_500.csv")                       
 
 ###########
 ### ASSIGN
 library(ASSIGN, "/usr2/faculty/wej/R/x86_64-unknown-linux-gnu-library/2.15")
-##VPA_1000
+##VPA_500
 geneList_vpa <- rownames(topGenes_vpa)
 S_matrix <- -fit2$coefficients[geneList_vpa,2]
 B_vector <- fit2$coefficients[geneList_vpa,1]+fit2$coefficients[geneList_vpa,2]
@@ -535,14 +535,14 @@ mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adapt
 vpa_pa <- mcmc.pos.mean4$beta_pos
 
 row.names(vpa_pa) <- names(testData_sub_TCGA)
-write.csv(vpa_pa, file="expression_TCGA_all_supriya_today.csv") # csv file for all TCGA tumor-normal samples
+write.csv(vpa_pa, file="expression_TCGA_all_supriya_500.csv") # csv file for all TCGA tumor-normal samples
 
 # plots and tables
 label <- as.factor(c(rep("normal",32),rep("tumor",215)))
                            
                       
-pdf("expression_TCGA_1000_supriya-today.pdf")
-boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_1000_expression.pdf")
+pdf("expression_TCGA_500_supriya-today.pdf")
+boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_500_expression.pdf")
 dev.off()  
                            
 
