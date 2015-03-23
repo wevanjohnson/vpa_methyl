@@ -105,7 +105,7 @@ write.table(met_combat,file="RReadyFinal_v2_combat.txt",quote=F,sep="\t")
 
 ## identify VPA 2h signature and VPA 6 h signature.
 ## With batch adjusted data
-pb_cells <- met[,37:72] 
+pb_cells <- met_combat[,37:72] 
 vpa <- names(pb_cells)[grep("VPA", names(pb_cells))]
 ctr <- names(pb_cells)[grep("ont", names(pb_cells))]
 
@@ -254,7 +254,7 @@ mcmc.chain <- assign.mcmc(Y = testData_sub_110p5_logit, Bg = B_vector, X = S_mat
 mcmc.pos.mean4 <- assign.summary(test=mcmc.chain, burn_in=1000, iter=2000, adaptive_B=T, adaptive_S=T,mixture_beta=T)
 vpa_pa <- mcmc.pos.mean4$kappa_pos
 row.names(vpa_pa) <- names(testData_sub_TCGA)
-write.csv(vpa_pa, file="methylation_TCGA_all_1000genes.csv") # csv file for all TCGA tumor-normal samples
+write.csv(vpa_pa, file="methylation_TCGA_all_200genes.csv") # csv file for all TCGA tumor-normal samples
 
 
 # plots and tables
@@ -297,8 +297,8 @@ pdf("methylation_320p2_50_vpa_6h.pdf")
 boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="320p2_50_vpa_6h_methylation_signature.pdf")
 dev.off()                           
 
-pdf("methylation$$_Unique+combat_tcga_vpa6h_1000.pdf")
-boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_1000_6h_methylation_Unique+Combat.pdf")
+pdf("methylation$$_Unique+combat_tcga_vpa6h_200.pdf")
+boxplot(mcmc.pos.mean4$kappa ~ label,ylab="vpa signature",main="TCGA_combat_vpa_200_6h_methylation_Unique+Combat.pdf")
 dev.off()  
 
 
