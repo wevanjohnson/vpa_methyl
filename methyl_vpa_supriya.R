@@ -133,11 +133,11 @@ fit2 <- lmFit(vpa_cells_logit,design)
 fit2 <- eBayes(fit2)
 
 # 1000 gene selection
-nTop <- 1000
+nTop <- 5000
 topGenes_vpa2h_2 <-topTable(fit2,coef=2,number=nTop)
 topGenes_vpa6h_2 <- topTable(fit2, coef=3,number=nTop)
 
-write.csv(topGenes_vpa6h_2, file="vpa_diff_Methyl_GeneList_1000.csv")
+write.csv(topGenes_vpa6h_2, file="vpa_diff_Methyl_GeneList_5000.csv")
        
 #  associate methylation sites with genes vpa2
 vpa2h <- topGenes_vpa2h_2[topGenes_vpa2h_2[,5]<0.05,]
@@ -511,7 +511,8 @@ topGenes_vpa <-topTable(fit,coef=2,number=nrow(vpa.matrix))
 write.csv(topGenes_vpa, file="vpa_diffGeneList_1000.csv") 
                         
 # 1000 gene selection
-nTop <- 1000
+nTop <- 5000
+write.csv(topGenes_vpa, file="vpa_diffGeneList_5000.csv")
 topGenes_vpa <-topTable(fit,coef=2,number=nTop)
                       
 
